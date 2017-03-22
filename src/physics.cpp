@@ -10,13 +10,16 @@
 #include <iostream>
 
 bool show_test_window = false;
+int updateRange = 20;
 bool euler = true;
 int waterfallIncrementX = -3;
 float timePerFrame = 0.033;
 float lenght = 0.5;
-glm::vec3 gravity = glm::vec3(0, -9.8, 0);
+float d;
 int maxMesh = 252;
+
 glm::vec3 normal;
+glm::vec3 gravity = glm::vec3(0, -9.8, 0);
 
 void GUI() {
 	{	//FrameRate
@@ -80,41 +83,87 @@ void PhysicsInit() {
 void PhysicsUpdate(float dt) {
 
 	glm::vec3 temp;
+	glm::vec3 vTangencial;
+	float coefElasticity = 0.9f;
+	bool collision = false;
+	float col;
+	glm::vec3 initial;
 
 	//euler
 	for (int i = 0; i < maxMesh; i++) 
 	{
+		initial = particlesContainer[i].pos;
 		particlesContainer[i].pos = particlesContainer[i].pos + particlesContainer[i].vel *dt;
 		particlesContainer[i].vel = particlesContainer[i].vel + gravity *dt;
 
+		// Floor Colision
+		normal = glm::vec3(0, 1, 0);
+		d = 0;
+		if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
+			particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+			particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+		}
+
+
+		
+		// Top Colision 
+		normal = glm::vec3(0, -1, 0);
+		d = 10;
+		if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
+			particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+			particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+		}
+		
+
+		// Right Face Colision
+			normal = glm::vec3(-1, 0, 0);
+			d = 5;
+			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
+				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+			}
+			
+
+		// Left Face Colision
+			normal = glm::vec3(1, 0, 0);
+			d = 5;
+			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
+				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+			}
+
+
+		// Front Face Colision
+			normal = glm::vec3(0, 0, -1);
+			d = 5;
+			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
+				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+			}
+
+
+		// Back Face Colision
+			normal = glm::vec3(0, 0, 1);
+			d = 5;
+			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
+				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+			}
+		
 		arra[3 * i + 0] = particlesContainer[i].pos.x;
 		arra[3 * i + 1] = particlesContainer[i].pos.y;
 		arra[3 * i + 2] = particlesContainer[i].pos.z;
 	}
 
 	ClothMesh::updateClothMesh(arra);
-	//colisions
-
-	//pla sostre
-		
-	//pla terra
-	normal = glm::vec3(0, 1, 0);
-	for (int i = 0; i < maxMesh; i++)
-	{
-		//if(particlesContainer[i].pos.y <= 0)
-		if (particlesContainer[i].pos.y <= 0) {
-			
-		}
-		
-	}
-	//pla lateral esquerra
-	
-	//pla lateral dret
 
 	//spring 1-dimensional model
+
 	//TODO
 }
+
 void PhysicsCleanup() {
+
 	//TODO
 	delete[] arra;
 }
