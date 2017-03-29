@@ -27,7 +27,6 @@ glm::vec3 gravity = glm::vec3(0, -9.8, 0);
 void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
 		//TODO
 	}
 
@@ -79,15 +78,15 @@ OurShpere *sphere = new OurShpere();
 
 void PhysicsInit() {
 	float random = rand() % 10;
-	sphere->pos = { random, random, random };
-	sphere->rad = rand() % 10 ;
+	sphere->pos = glm::vec3(1, 0, 0);
+	sphere->rad = 1 ;
 	//Grid
 	for (int i = 0; i < LilSpheres::maxParticles; ++i) {
 		//particlesContainer[i].pos = glm::vec3(arra[i * 3], arra[i * 3 + 1], arra[i * 3 + 2]) = glm::vec3(-5 + lenght * (i % 14) , 10 - lenght * (i / 14), 0);
 		
-		arra[3 * i + 0] = particlesContainer[i].pos.x = -5 + lenght * (i % 14);
-		arra[3 * i + 1] = particlesContainer[i].pos.y = 10 - lenght * (i / 14);
-		arra[3 * i + 2] = particlesContainer[i].pos.z = 0;
+		arra[3 * i + 0] = particlesContainer[i].pos.x = -3 + lenght * (i % 14);
+		arra[3 * i + 1] = particlesContainer[i].pos.y = 10;
+		arra[3 * i + 2] = particlesContainer[i].pos.z = (14*lenght)/2+0.5 - lenght * (i / 14);
 
 		particlesContainer[i].vel = glm::vec3(0.f, 0.f, 0.f);
 		
@@ -111,7 +110,8 @@ void PhysicsUpdate(float dt) {
 
 	glm::vec3 temp;
 	glm::vec3 vTangencial;
-	float coefElasticity = 0.9f;
+	float coefElasticity = 0.6f;
+	float coefFriction = 0.1f;
 	bool collision = false;
 	float col;
 	glm::vec3 initial;
@@ -123,77 +123,84 @@ void PhysicsUpdate(float dt) {
 		particlesContainer[i].pos = particlesContainer[i].pos + particlesContainer[i].vel *dt;
 		particlesContainer[i].vel = particlesContainer[i].vel + gravity *dt;
 
+
 		// Floor Colision
 		normal = glm::vec3(0, 1, 0);
+		temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 		d = 0;
 		if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
 			particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-			particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+			particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
 		}
 
 
 		
 		// Top Colision 
+		temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 		normal = glm::vec3(0, -1, 0);
 		d = 10;
 		if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
 			particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-			particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+			particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
 		}
 		
 
 		// Right Face Colision
 			normal = glm::vec3(-1, 0, 0);
+			temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 			d = 5;
 			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
 				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
 			}
 			
 
 		// Left Face Colision
 			normal = glm::vec3(1, 0, 0);
+			temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 			d = 5;
 			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
 				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
+
 			}
 
 
 		// Front Face Colision
 			normal = glm::vec3(0, 0, -1);
+			temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 			d = 5;
 			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
 				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
+
 			}
 
 
 		// Back Face Colision
 			normal = glm::vec3(0, 0, 1);
+			temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 			d = 5;
 			//int deb = -(particlesContainer[i].pos.x*normal.x) - (particlesContainer[i].pos.y*normal.y) - (particlesContainer[i].pos.z*normal.z);
 			//std::cout << deb;
 			if ((glm::dot(normal, particlesContainer[i].pos) + d)*((glm::dot(normal, initial) + d)) < 0) {
 				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
+
 			}
 		
 		//Shpere Colision
-			/*if () {
-				normal = { particlesContainer[i].pos - sphere->pos };
+			
+			
+			if (glm::sqrt(glm::pow(particlesContainer[i].pos.x - sphere->pos.x, 2) + glm::pow(particlesContainer[i].pos.y - sphere->pos.y, 2) + glm::pow(particlesContainer[i].pos.z - sphere->pos.z, 2)) < sphere->rad)
+				normal = glm::vec3(particlesContainer[i].pos - sphere->pos);
+				temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 				d = -(particlesContainer[i].pos.x*normal.x) - (particlesContainer[i].pos.y*normal.y) - (particlesContainer[i].pos.z*normal.z);
 
-				if (euler) {
-					//friction values
-					temp = glm::dot(normal, particlesContainer[i].vel) * normal;
-					vTangencial = particlesContainer[i].vel - temp;
-
-					//elasticity and friction
-					particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
-					particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*vTangencial;
-					}
-				}*/
+				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
+				
+				
 
 		arra[3 * i + 0] = particlesContainer[i].pos.x;
 		arra[3 * i + 1] = particlesContainer[i].pos.y;
@@ -217,6 +224,14 @@ void PhysicsUpdate(float dt) {
 
 
 	//TODO
+	/*//friction values
+	temp = glm::dot(normal, particlesContainer[i].vel) * normal;
+	vTangencial = particlesContainer[i].vel - temp;
+
+	//elasticity and friction
+	particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
+	particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*vTangencial;
+	*/
 }
 
 void PhysicsCleanup() {
