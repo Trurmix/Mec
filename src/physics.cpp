@@ -86,7 +86,7 @@ void PhysicsInit() {
 		
 		arra[3 * i + 0] = particlesContainer[i].pos.x = -3 + lenght * (i % 14);
 		arra[3 * i + 1] = particlesContainer[i].pos.y = 10;
-		arra[3 * i + 2] = particlesContainer[i].pos.z = (14*lenght)/2+0.5 - lenght * (i / 14);
+		arra[3 * i + 2] = particlesContainer[i].pos.z = (14*lenght)/2 + lenght - lenght * (i / 14);
 
 		particlesContainer[i].vel = glm::vec3(0.f, 0.f, 0.f);
 		
@@ -120,8 +120,14 @@ void PhysicsUpdate(float dt) {
 	for (int i = 0; i < maxMesh; i++) 
 	{
 		initial = particlesContainer[i].pos;
-		particlesContainer[i].pos = particlesContainer[i].pos + particlesContainer[i].vel *dt;
-		particlesContainer[i].vel = particlesContainer[i].vel + gravity *dt;
+		if (i == 0 || i == 13) {
+			particlesContainer[i].pos = initial;
+			particlesContainer[i].vel = { 0, 0, 0 };
+		}
+		else {
+			particlesContainer[i].pos = particlesContainer[i].pos + particlesContainer[i].vel *dt;
+			particlesContainer[i].vel = particlesContainer[i].vel + gravity *dt;
+		}
 
 
 		// Floor Colision
@@ -190,17 +196,22 @@ void PhysicsUpdate(float dt) {
 			}
 		
 		//Shpere Colision
-			
-			
-			if (glm::sqrt(glm::pow(particlesContainer[i].pos.x - sphere->pos.x, 2) + glm::pow(particlesContainer[i].pos.y - sphere->pos.y, 2) + glm::pow(particlesContainer[i].pos.z - sphere->pos.z, 2)) < sphere->rad)
-				normal = glm::vec3(particlesContainer[i].pos - sphere->pos);
+			float A = ((particlesContainer[i].pos.x - initial.x) + (particlesContainer[i].pos.y - initial.y) + (particlesContainer[i].pos.z - initial.z));
+			float B = 4 * ((particlesContainer[i].pos.x - initial.x) * (initial.x + sphere->pos.x) + (particlesContainer[i].pos.y - initial.y) * (initial.x + sphere->pos.y) + (particlesContainer[i].pos.z - initial.z) * (initial.x + sphere->pos.z));
+			float C = 2 * ((initial.x * sphere->pos.x) + (initial.y * sphere->pos.y) + (initial.z * sphere->pos.z)) + (glm::pow(initial.x, 2) + glm::pow(initial.y, 2) + glm::pow(initial.z, 2) + glm::pow(sphere->pos.x, 2) + glm::pow(sphere->pos.y, 2) + glm::pow(sphere->pos.z, 2));
+			//equacio 2n grau
+			if ((-B + glm::sqrt(glm::pow(B, 2)) - 4*A*C)/(2*A) < 0 || (-B - glm::sqrt(glm::pow(B, 2)) - 4 * A*C) / (2 * A) < 0) {
+
+				normal = sphere->pos / (glm::sqrt(glm::pow(sphere->pos.x, 2) + glm::pow(sphere->pos.y, 2) + glm::pow(sphere->pos.z, 2)));
+				//normal = glm::vec3(particlesContainer[i].pos - sphere->pos);
 				temp = glm::dot(normal, particlesContainer[i].vel) * normal;
 				d = -(particlesContainer[i].pos.x*normal.x) - (particlesContainer[i].pos.y*normal.y) - (particlesContainer[i].pos.z*normal.z);
 
 				particlesContainer[i].pos = particlesContainer[i].pos - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].pos) + d)*normal;
 				particlesContainer[i].vel = particlesContainer[i].vel - (1 + coefElasticity) * (glm::dot(normal, particlesContainer[i].vel))* normal - coefFriction*(particlesContainer[i].vel - temp);
-				
-				
+			}
+			/*if (glm::sqrt(glm::pow(particlesContainer[i].pos.x - sphere->pos.x, 2) + glm::pow(particlesContainer[i].pos.y - sphere->pos.y, 2) + glm::pow(particlesContainer[i].pos.z - sphere->pos.z, 2)) < sphere->rad)
+				*/
 
 		arra[3 * i + 0] = particlesContainer[i].pos.x;
 		arra[3 * i + 1] = particlesContainer[i].pos.y;
@@ -208,6 +219,7 @@ void PhysicsUpdate(float dt) {
 	}
 	Sphere::updateSphere(sphere->pos, sphere->rad);
 	ClothMesh::updateClothMesh(arra);
+
 
 
 	/*
