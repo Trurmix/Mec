@@ -20,6 +20,8 @@ float d;
 int eixX = 14;
 int eixY = 18;
 int maxMesh = eixX*eixY;
+float Ke = 0.6;
+float Kd = 0.6;
 
 glm::vec3 normal;
 glm::vec3 gravity = glm::vec3(0, -9.8, 0);
@@ -69,7 +71,8 @@ struct Particle {
 	glm::vec3 lastPos;
 	glm::vec3 vel;
 	glm::vec3 lastVel;
-	float force;
+	//float force;
+	glm::vec3 force;
 };
 
 float *arra = new float[3*maxMesh];
@@ -89,6 +92,7 @@ void PhysicsInit() {
 		arra[3 * i + 2] = particlesContainer[i].pos.z = (14*lenght)/2 + lenght - lenght * (i / 14);
 
 		particlesContainer[i].vel = glm::vec3(0.f, 0.f, 0.f);
+		particlesContainer[i].force = glm::vec3(0.f, 0.f, 0.f);
 		
 	}
 
@@ -119,6 +123,34 @@ void PhysicsUpdate(float dt) {
 	//euler
 	for (int i = 0; i < maxMesh; i++) 
 	{
+		//calcular en una variable on en quina fila i columna es troba la i.
+		//segons a on esta, dirli si pot anar dreta o esquerra, dalt o baix.
+		//sumatori forces
+
+		int fila = i / eixX;
+		int column = i % eixX;
+		//std::cout << column;
+		//springs dude
+		//if (i < eixX * eixY ) {
+			glm::vec3 distAB = particlesContainer[i].pos - particlesContainer[i++].pos;
+			float modul = glm::sqrt(glm::pow(particlesContainer[i].pos.x - particlesContainer[i++].pos.x, 2) + glm::pow(particlesContainer[i].pos.y - particlesContainer[i++].pos.y, 2) + glm::pow(particlesContainer[i].pos.z - particlesContainer[i++].pos.z, 2));
+			glm::vec3 nAB = distAB / modul;
+			
+			if (fila == 0 ) { //probar aixo 
+
+				particlesContainer[i].force -= (Ke * (modul - lenght) + Kd * (particlesContainer[i].vel - particlesContainer[i++].vel) * nAB)*nAB + gravity;
+				particlesContainer[i++].force -= particlesContainer[i].force;
+			}
+
+			else {
+				particlesContainer[i].force = gravity;
+			}
+		//}
+		
+		
+
+		//particlesContainer[i].force = gravity;
+
 		initial = particlesContainer[i].pos;
 		if (i == 0 || i == 13) {
 			particlesContainer[i].pos = initial;
@@ -126,7 +158,7 @@ void PhysicsUpdate(float dt) {
 		}
 		else {
 			particlesContainer[i].pos = particlesContainer[i].pos + particlesContainer[i].vel *dt;
-			particlesContainer[i].vel = particlesContainer[i].vel + gravity *dt;
+			particlesContainer[i].vel = particlesContainer[i].vel + particlesContainer[i].force* dt;
 		}
 
 
@@ -212,6 +244,9 @@ void PhysicsUpdate(float dt) {
 			}
 			/*if (glm::sqrt(glm::pow(particlesContainer[i].pos.x - sphere->pos.x, 2) + glm::pow(particlesContainer[i].pos.y - sphere->pos.y, 2) + glm::pow(particlesContainer[i].pos.z - sphere->pos.z, 2)) < sphere->rad)
 				*/
+
+
+
 
 		arra[3 * i + 0] = particlesContainer[i].pos.x;
 		arra[3 * i + 1] = particlesContainer[i].pos.y;
