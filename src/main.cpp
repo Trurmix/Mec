@@ -9,10 +9,12 @@
 
 static GLFWwindow *window;
 
+extern void Spring(int part1, int part2);
 extern void PhysicsInit();
 extern void PhysicsUpdate(float dt);
 extern void PhysicsCleanup();
 extern void GUI();
+
 
 extern void GLmousecb(MouseEvent ev);
 extern void GLResize(int width, int height);
