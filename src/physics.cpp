@@ -20,8 +20,15 @@ float d;
 int eixX = 14;
 int eixY = 18;
 int maxMesh = eixX*eixY;
-float Ke = 0;
-float Kd = 0;
+float Ks = 0;
+float Kd = 10;
+float coefElasticity = 0.2;
+float coefFriction = 0.1;
+glm::vec3 temp;
+glm::vec3 vTangencial;
+bool collision = false;
+float col;
+glm::vec3 initial;
 //void Spring(int part1, int part2);
 
 glm::vec3 normal;
@@ -114,13 +121,7 @@ void PhysicsInit() {
 
 void PhysicsUpdate(float dt) {
 
-	glm::vec3 temp;
-	glm::vec3 vTangencial;
-	float coefElasticity = 0.6f;
-	float coefFriction = 0.1f;
-	bool collision = false;
-	float col;
-	glm::vec3 initial;
+	
 
 	//euler
 	for (int i = 0; i < maxMesh; i++)
@@ -150,44 +151,34 @@ void PhysicsUpdate(float dt) {
 		int twoDiagLeftDown = i + (2 * eixX - 1);
 		int twoDiagRightDown = i + (2 * eixX + 1);
 
+		pC[i].force = gravity;
+
 		if (fila == 0) {
 			if (column == 0) {
-				//bending
-				Spring(i, twoRight);
-				Spring(i, twoDown);
-				Spring(i, twoDiagRightDown);
-				//Spring(i, maxMesh - 1);
-				//Spring(i, maxMesh - 13);
-
 				//structural
 				Spring(i, right);
 				Spring(i, down);
 
 				//shear
 				Spring(i, diagRightDown);
+
+				//bending
+				Spring(i, twoRight);
+				Spring(i, twoDown);
+
 			}
 			if (column == (eixX - 1)) {
-				//bending
-				Spring(i, twoLeft);
-				Spring(i, twoDown);
-				Spring(i, twoDiagLeftDown);
-				//Spring(i, maxMesh - (eixX - 1));
-
 				//structural
 				Spring(i, left);
 				Spring(i, down);
 
 				//shear
 				Spring(i, diagLeftDown);
+
+				//bending
+				Spring(i, twoDown);
 			}
 			else {
-				//bending
-				Spring(i, twoRight);
-				Spring(i, twoLeft);
-				Spring(i, twoDown);
-				Spring(i, twoDiagRightDown);
-				Spring(i, twoDiagLeftDown);
-
 				//structural
 				Spring(i, right);
 				Spring(i, left);
@@ -196,46 +187,43 @@ void PhysicsUpdate(float dt) {
 				//shear
 				Spring(i, diagLeftDown);
 				Spring(i, diagRightDown);
+
+				//bending
+				if (column % 2 == 0) {
+					Spring(i, twoRight);
+					Spring(i, twoLeft);
+					Spring(i, twoDown);
+				}
+				if (column % 2 != 0) {
+					Spring(i, twoDown);
+				}
 			}
 
 		}
 		else if (fila == (eixY - 1)) {
 			if (column == 0) {
-				//bending
-				Spring(i, twoUp);
-				Spring(i, twoRight);
-				Spring(i, twoDiagRightUp);
-				//Spring(i, 0);
-				//Spring(i, 0);
-
 				//structural
 				Spring(i, right);
 				Spring(i, up);
 
 				//shear
 				Spring(i, diagRightUp);
+				
+				//bending
+				//Spring(i, twoRight);	
 			}
 			if (column == (eixX - 1)) {
-				//bending
-				Spring(i, twoUp);
-				Spring(i, twoLeft);
-				Spring(i, twoDiagLeftUp);
-				//Spring(i, eixX - 1);
-
 				//structural
 				Spring(i, left);
 				Spring(i, up);
 
 				//shear
 				Spring(i, diagLeftUp);
+
+				//bending
+
 			}
 			else {
-				//bending
-				Spring(i, twoRight);
-				Spring(i, twoLeft);
-				Spring(i, twoUp);
-				Spring(i, twoDiagLeftUp);
-				Spring(i, twoDiagRightUp);
 				//structural
 				Spring(i, right);
 				Spring(i, left);
@@ -247,17 +235,18 @@ void PhysicsUpdate(float dt) {
 				//shear
 				Spring(i, diagRightUp);
 				Spring(i, diagLeftUp);
+				
+				//bending
+				/*if (column % 2 == 0) {
+					Spring(i, twoRight);
+					Spring(i, twoLeft);
+				}*/
+
+				
 			}
 		}
 		else {
 			if (column == 0) {
-				//bending
-				Spring(i, twoUp);
-				Spring(i, twoDown);
-				Spring(i, twoRight);
-				Spring(i, twoDiagRightUp);
-				Spring(i, twoDiagRightDown);
-
 				//structural
 				Spring(i, right);
 				Spring(i, down);
@@ -266,15 +255,18 @@ void PhysicsUpdate(float dt) {
 				//shear
 				Spring(i, diagRightDown);
 				Spring(i, diagRightUp);
+				
+				//bending
+				/*if (fila % 2 == 0) {
+					Spring(i, twoUp);
+					Spring(i, twoDown);
+					Spring(i, twoRight);
+				}
+				if (fila % 2 != 0) {
+					Spring(i, twoRight);
+				}*/	
 			}
 			if (column == (eixX - 1)) {
-				//bending
-				Spring(i, twoUp);
-				Spring(i, twoDown);
-				Spring(i, twoLeft);
-				Spring(i, twoDiagLeftUp);
-				Spring(i, twoDiagLeftDown);
-
 				//structural
 				Spring(i, left);
 				Spring(i, down);
@@ -283,17 +275,15 @@ void PhysicsUpdate(float dt) {
 				//shear
 				Spring(i, diagLeftDown);
 				Spring(i, diagLeftUp);
+
+				//bending
+				/*if (fila % 2 == 0) {
+					Spring(i, twoUp);
+					Spring(i, twoDown);
+				}*/
+
 			}
 			else {
-				//bending
-				Spring(i, twoUp);
-				Spring(i, twoDown);
-				Spring(i, twoLeft);
-				Spring(i, twoRight);
-				Spring(i, twoDiagLeftUp);
-				Spring(i, twoDiagLeftDown);
-				Spring(i, twoDiagRightUp);
-				Spring(i, twoDiagRightDown);
 
 				//structural
 				Spring(i, right);
@@ -306,7 +296,24 @@ void PhysicsUpdate(float dt) {
 				Spring(i, diagLeftDown);
 				Spring(i, diagRightUp);
 				Spring(i, diagRightDown);
+
+				//bending
+				/*if ((column % 2 == 0) && (fila % 2 == 0)) {
+					Spring(i, twoUp);
+					Spring(i, twoDown);
+					Spring(i, twoLeft);
+					Spring(i, twoRight);
+				}
+				else if ((column % 2 != 0) && (fila % 2 == 0)) {
+					Spring(i, twoUp);
+					Spring(i, twoDown);
+				}
+				else if ((column % 2 == 0) && (fila % 2 != 0)) {
+					Spring(i, twoLeft);
+					Spring(i, twoRight);
+				}*/
 			}
+			//else pC[i].force = gravity;
 		}
 
 		//----------FIXED POINTS----------------------------------------
@@ -429,7 +436,7 @@ void Spring(int part1, int part2) {
 
 	glm::vec3 f1, f2;
 
-	f1 = -((Ke * (modul - lenght) + Kd * (pC[part1].vel - pC[part2].vel)) * nAB)*nAB + gravity;
+	f1 = -((Ks * (modul - lenght) + Kd * (pC[part1].vel - pC[part2].vel)) * nAB)*nAB;
 	f2 = -f1;
 	//if(part1 == 0) pC[part1].force = f1;
 	//else {

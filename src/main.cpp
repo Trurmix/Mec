@@ -9,7 +9,7 @@
 
 static GLFWwindow *window;
 
-extern void Spring(int part1, int part2);
+//extern glm::vec3 Spring(int part1, int part2);
 extern void PhysicsInit();
 extern void PhysicsUpdate(float dt);
 extern void PhysicsCleanup();
