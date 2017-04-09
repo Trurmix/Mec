@@ -229,7 +229,7 @@ void PhysicsUpdate(float dt) {
 				
 				//bending
 				Spring(i, twoRight, bendLenght, KdB);
-				//Spring(i, twoUp, bendLenght, KdB);
+				Spring(i, twoUp, bendLenght, KdB);
 			}
 			if (column == (eixX - 1)) {
 				//structural
@@ -240,8 +240,8 @@ void PhysicsUpdate(float dt) {
 				Spring(i, diagLeftUp, shareLenght, KdSh);
 
 				//bending
-				//Spring(i, twoLeft, bendLenght, KdB);
-				//Spring(i, twoUp, bendLenght, KdB);
+				Spring(i, twoLeft, bendLenght, KdB);
+				Spring(i, twoUp, bendLenght, KdB);
 
 			}
 			else {
@@ -278,14 +278,14 @@ void PhysicsUpdate(float dt) {
 				Spring(i, diagRightUp, shareLenght, KdSh);
 				
 				//bending
-				if (fila % 2 == 0) {
+				/*if (fila % 2 == 0) {
 					//Spring(i, twoUp, bendLenght, KdB);
 					//Spring(i, twoDown, bendLenght, KdB);
 					//Spring(i, twoRight, bendLenght, KdB);
 				}
 				if (fila % 2 != 0) {
 					//Spring(i, twoRight, bendLenght, KdB);
-				}
+				}*/
 			}
 			if (column == (eixX - 1)) {
 				//structural
