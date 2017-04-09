@@ -9,7 +9,7 @@
 #include <time.h>
 #include <iostream>
 
-void Spring(int part1, int part2);
+void Spring(int part1, int part2, float lenght, float Kd);
 bool show_test_window = false;
 int updateRange = 20;
 bool euler = true;
@@ -21,7 +21,9 @@ int eixX = 14;
 int eixY = 18;
 int maxMesh = eixX*eixY;
 float Ks = 0;
-float Kd = 10;
+float KdS = 10;
+float KdSh = 8;
+float KdB = 5;
 float coefElasticity = 0.2;
 float coefFriction = 0.1;
 glm::vec3 temp;
@@ -29,6 +31,7 @@ glm::vec3 vTangencial;
 bool collision = false;
 float col;
 glm::vec3 initial;
+float cont = 0;
 //void Spring(int part1, int part2);
 
 glm::vec3 normal;
@@ -37,12 +40,21 @@ glm::vec3 gravity = glm::vec3(0, -9.8, 0);
 void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		//TODO
+
+		//GUI Waterfall
+		ImGui::SliderFloat("Damping Stretch", &KdS, 0, 1000);
+		ImGui::SliderFloat("Damping Shear", &KdSh, 0, 1000);
+		ImGui::SliderFloat("Damping Bend", &KdB, 0, 1000);
+
+		ImGui::SliderFloat("Initial Lenght", &lenght, 0, 1);
+		ImGui::SliderFloat("Time", &cont, 0, 20);
+		
 	}
 
 	// ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
 	if (show_test_window) {
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
+
 		ImGui::ShowTestWindow(&show_test_window);
 	}
 }
@@ -88,9 +100,13 @@ Particle *pC = new Particle[LilSpheres::maxParticles];
 OurShpere *sphere = new OurShpere();
 
 void PhysicsInit() {
-	float random = rand() % 10;
-	sphere->pos = glm::vec3(1, 0, 0);
-	sphere->rad = 1;
+	srand((unsigned)time(NULL));
+	int randomXZ = rand() % 11 + (-5);
+	float randomY = rand() % 10;
+	sphere->pos = glm::vec3(randomXZ, randomY, randomXZ);
+	sphere->rad = rand() % 5+1;
+
+
 	//Grid
 	for (int i = 0; i < LilSpheres::maxParticles; ++i) {
 		//particlesContainer[i].pos = glm::vec3(arra[i * 3], arra[i * 3 + 1], arra[i * 3 + 2]) = glm::vec3(-5 + lenght * (i % 14) , 10 - lenght * (i / 14), 0);
@@ -104,24 +120,20 @@ void PhysicsInit() {
 
 	}
 
-	//sphere->pos = glm::vec3(random, random, random);//glm::vec3(Sphere::centro.x*random, Sphere::centro.y*random, Sphere::centro.z*random);
-	//sphere->rad = abs(rand());
-	//if(sphere->pos <= )
-	srand(time(NULL));
 	ClothMesh::updateClothMesh(mesh);
-	//Sphere::setupSphere(sphere->pos, sphere->rad);
-
-
-	//float random = rand() % 100;
-	//Sphere::setupSphere(Sphere::centro*random, abs(rand()));
-	//Sphere::updateSphere(Sphere::centro*random, abs(rand()));
-
 }
 
 
 void PhysicsUpdate(float dt) {
 
-	
+	//srand(time(NULL));
+	cont += ImGui::GetIO().DeltaTime;
+	//std::cout << "Time:" << cont;
+
+	if (cont >= 20) {
+		PhysicsInit();
+		cont = 0;
+	}
 
 	//euler
 	for (int i = 0; i < maxMesh; i++)
@@ -133,6 +145,10 @@ void PhysicsUpdate(float dt) {
 //------SPRINGS----------------------------------------------------------------------
 		int fila = i / eixX;
 		int column = i % eixX;
+
+		float structureLenght = lenght;
+		float shareLenght = glm::sqrt(glm::pow(lenght, 2) + glm::pow(lenght, 2));
+		float bendLenght = structureLenght * 2;
 
 		int diagLeftDown = i + eixX - 1;
 		int diagLeftUp = i - eixX - 1;
@@ -156,91 +172,96 @@ void PhysicsUpdate(float dt) {
 		if (fila == 0) {
 			if (column == 0) {
 				//structural
-				Spring(i, right);
-				Spring(i, down);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, down, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagRightDown);
+				Spring(i, diagRightDown, shareLenght, KdSh);
+
 
 				//bending
-				Spring(i, twoRight);
-				Spring(i, twoDown);
+				Spring(i, twoRight, bendLenght, KdB);
+				Spring(i, twoDown, bendLenght, KdB);
 
 			}
 			if (column == (eixX - 1)) {
 				//structural
-				Spring(i, left);
-				Spring(i, down);
+				Spring(i, left, structureLenght, KdS);
+				Spring(i, down, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagLeftDown);
+				Spring(i, diagLeftDown, shareLenght, KdSh);
 
 				//bending
-				Spring(i, twoDown);
+				Spring(i, twoDown, bendLenght, KdB);
+				//Spring(i, twoLeft, bendLenght, KdB);
 			}
 			else {
 				//structural
-				Spring(i, right);
-				Spring(i, left);
-				Spring(i, down);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, left, structureLenght, KdS);
+				Spring(i, down, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagLeftDown);
-				Spring(i, diagRightDown);
+				Spring(i, diagLeftDown, shareLenght, KdSh);
+				Spring(i, diagRightDown, shareLenght, KdSh);
 
 				//bending
-				if (column % 2 == 0) {
-					Spring(i, twoRight);
-					Spring(i, twoLeft);
-					Spring(i, twoDown);
-				}
 				if (column % 2 != 0) {
-					Spring(i, twoDown);
+					Spring(i, twoRight, bendLenght, KdB);
+					Spring(i, twoLeft, bendLenght, KdB);
+					Spring(i, twoDown, bendLenght, KdB);
 				}
+				/*if (column % 2 == 0) {
+					Spring(i, twoDown, bendLenght, KdB);
+				}*/
 			}
 
 		}
 		else if (fila == (eixY - 1)) {
 			if (column == 0) {
 				//structural
-				Spring(i, right);
-				Spring(i, up);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, up, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagRightUp);
+				Spring(i, diagRightUp, shareLenght, KdSh);
 				
 				//bending
-				//Spring(i, twoRight);	
+				Spring(i, twoRight, bendLenght, KdB);
+				//Spring(i, twoUp, bendLenght, KdB);
 			}
 			if (column == (eixX - 1)) {
 				//structural
-				Spring(i, left);
-				Spring(i, up);
+				Spring(i, left, structureLenght, KdS);
+				Spring(i, up, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagLeftUp);
+				Spring(i, diagLeftUp, shareLenght, KdSh);
 
 				//bending
+				//Spring(i, twoLeft, bendLenght, KdB);
+				//Spring(i, twoUp, bendLenght, KdB);
 
 			}
 			else {
 				//structural
-				Spring(i, right);
-				Spring(i, left);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, left, structureLenght, KdS);
 				//std::cout << up;
-				Spring(i, up);
-				Spring(i, right);
-				Spring(i, left);
+				Spring(i, up, structureLenght, KdS);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, left, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagRightUp);
-				Spring(i, diagLeftUp);
+				Spring(i, diagRightUp, shareLenght, KdSh);
+				Spring(i, diagLeftUp, shareLenght, KdSh);
 				
 				//bending
-				/*if (column % 2 == 0) {
-					Spring(i, twoRight);
-					Spring(i, twoLeft);
-				}*/
+				if (column % 2 == 0) {
+					//Spring(i, twoRight, bendLenght, KdB);
+					Spring(i, twoLeft, bendLenght, KdB);
+				}
 
 				
 			}
@@ -248,70 +269,70 @@ void PhysicsUpdate(float dt) {
 		else {
 			if (column == 0) {
 				//structural
-				Spring(i, right);
-				Spring(i, down);
-				Spring(i, up);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, down, structureLenght, KdS);
+				Spring(i, up, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagRightDown);
-				Spring(i, diagRightUp);
+				Spring(i, diagRightDown, shareLenght, KdSh);
+				Spring(i, diagRightUp, shareLenght, KdSh);
 				
 				//bending
-				/*if (fila % 2 == 0) {
-					Spring(i, twoUp);
-					Spring(i, twoDown);
-					Spring(i, twoRight);
+				if (fila % 2 == 0) {
+					//Spring(i, twoUp, bendLenght, KdB);
+					//Spring(i, twoDown, bendLenght, KdB);
+					//Spring(i, twoRight, bendLenght, KdB);
 				}
 				if (fila % 2 != 0) {
-					Spring(i, twoRight);
-				}*/	
+					//Spring(i, twoRight, bendLenght, KdB);
+				}
 			}
 			if (column == (eixX - 1)) {
 				//structural
-				Spring(i, left);
-				Spring(i, down);
-				Spring(i, up);
+				Spring(i, left, structureLenght, KdS);
+				Spring(i, down, structureLenght, KdS);
+				Spring(i, up, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagLeftDown);
-				Spring(i, diagLeftUp);
+				Spring(i, diagLeftDown, shareLenght, KdSh);
+				Spring(i, diagLeftUp, shareLenght, KdSh);
 
 				//bending
-				/*if (fila % 2 == 0) {
-					Spring(i, twoUp);
-					Spring(i, twoDown);
-				}*/
+				if (fila % 2 == 0) {
+					//Spring(i, twoUp, bendLenght, KdB);
+					Spring(i, twoDown, bendLenght, KdB);
+				}
 
 			}
 			else {
 
 				//structural
-				Spring(i, right);
-				Spring(i, left);
-				Spring(i, down);
-				Spring(i, up);
+				Spring(i, right, structureLenght, KdS);
+				Spring(i, left, structureLenght, KdS);
+				Spring(i, down, structureLenght, KdS);
+				Spring(i, up, structureLenght, KdS);
 
 				//shear
-				Spring(i, diagLeftUp);
-				Spring(i, diagLeftDown);
-				Spring(i, diagRightUp);
-				Spring(i, diagRightDown);
+				Spring(i, diagLeftUp, shareLenght, KdSh);
+				Spring(i, diagLeftDown, shareLenght, KdSh);
+				Spring(i, diagRightUp, shareLenght, KdSh);
+				Spring(i, diagRightDown, shareLenght, KdSh);
 
 				//bending
-				/*if ((column % 2 == 0) && (fila % 2 == 0)) {
-					Spring(i, twoUp);
-					Spring(i, twoDown);
-					Spring(i, twoLeft);
-					Spring(i, twoRight);
+				if ((column % 2 == 0) && (fila % 2 == 0)) {
+					Spring(i, twoUp, bendLenght, KdB);
+					//Spring(i, twoDown, bendLenght, KdB);
+					//Spring(i, twoLeft, bendLenght, KdB);
+					//Spring(i, twoRight, bendLenght, KdB);
 				}
 				else if ((column % 2 != 0) && (fila % 2 == 0)) {
-					Spring(i, twoUp);
-					Spring(i, twoDown);
+					//Spring(i, twoUp, bendLenght, KdB);
+					//Spring(i, twoDown, bendLenght, KdB);
 				}
 				else if ((column % 2 == 0) && (fila % 2 != 0)) {
-					Spring(i, twoLeft);
-					Spring(i, twoRight);
-				}*/
+					//Spring(i, twoLeft, bendLenght, KdB);
+					//Spring(i, twoRight, bendLenght, KdB);
+				}
 			}
 			//else pC[i].force = gravity;
 		}
@@ -429,7 +450,7 @@ void PhysicsUpdate(float dt) {
 	ClothMesh::updateClothMesh(mesh);
 
 }
-void Spring(int part1, int part2) {
+void Spring(int part1, int part2, float lenght, float Kd) {
 	glm::vec3 distAB = pC[part1].pos - pC[part2].pos;
 	float modul = glm::sqrt(glm::pow(pC[part1].pos.x - pC[part2].pos.x, 2) + glm::pow(pC[part1].pos.y - pC[part2].pos.y, 2) + glm::pow(pC[part1].pos.z - pC[part2].pos.z, 2));
 	glm::vec3 nAB = distAB / modul;
@@ -451,9 +472,10 @@ void Spring(int part1, int part2) {
 
 }
 
+
 void PhysicsCleanup() {
 
 	//TODO
 	delete[] mesh;
-	delete[] pC;
+	//delete[] pC;
 }
